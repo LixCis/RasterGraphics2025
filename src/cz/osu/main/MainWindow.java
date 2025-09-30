@@ -17,12 +17,18 @@ public class MainWindow extends JPanel{
 
         initialize();
         
-        vram = new V_RAM(10, 10);
+        vram = new V_RAM(100, 300);
+        int borderSize = 1;
 
-        vram.setPixel(2,2,255,0,0);
-        vram.setPixel(7,7,0,255,0);
-        vram.setPixel(2,7,0,0,255);
-        vram.setPixel(7,2,255,255,255);
+        for (int w = 0; w < vram.getWidth(); w++) {
+            for (int h = 0; h < vram.getHeight(); h++) {
+                vram.setPixel(w, h, 255, 255, 0);
+                if (w < borderSize || w >= vram.getWidth() - borderSize ||
+                        h < borderSize || h >= vram.getHeight() - borderSize) {
+                    vram.setPixel(w, h, 0, 255, 0);
+                }
+            }
+        }
 
         imagePanel.setImage(vram.getImage());
     }
