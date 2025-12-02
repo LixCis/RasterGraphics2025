@@ -1,7 +1,13 @@
 package cz.osu.main;
 
+import cz.osu.exercises.Cv01_RGB;
+import cz.osu.exercises.Matrix2D;
+import cz.osu.exercises.Point2D;
+import cz.osu.tasks.KU1_TWO;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -11,26 +17,34 @@ public class MainWindow extends JPanel{
 
     private ImagePanel imagePanel;
 
-    private V_RAM vram;
-
     public MainWindow(){
 
         initialize();
-        
-        vram = new V_RAM(100, 300);
-        int borderSize = 1;
 
-        for (int w = 0; w < vram.getWidth(); w++) {
-            for (int h = 0; h < vram.getHeight(); h++) {
-                vram.setPixel(w, h, 255, 255, 0);
-                if (w < borderSize || w >= vram.getWidth() - borderSize ||
-                        h < borderSize || h >= vram.getHeight() - borderSize) {
-                    vram.setPixel(w, h, 0, 255, 0);
-                }
-            }
-        }
+        V_RAM vRam = new V_RAM(200, 200);
 
-        imagePanel.setImage(vram.getImage());
+        Point2D p1 = new Point2D(15.6, 10.3);
+        Point p1i = p1.getPoint();
+        vRam.setPixel(p1i.x, p1i.y, 255, 255, 255);
+
+        Matrix2D t1 = Matrix2D.translate(6, 11);
+        Point2D p2 = t1.multiply(p1);
+        Point p2i = p2.getPoint();
+        vRam.setPixel(p2i.x, p2i.y, 0, 255, 0);
+
+        Matrix2D t2 = Matrix2D.rotate(10);
+        Point2D p3 = t2.multiply(p2);
+        Point p3i = p3.getPoint();
+        vRam.setPixel(p3i.x, p3i.y, 0, 0, 255);
+
+        Matrix2D total = t2.multiply(t1);
+        Point2D p4 = total.multiply(p1);
+        Point p4i = p4.getPoint();
+        vRam.setPixel(p4i.x, p4i.y, 0, 255, 255);
+
+        imagePanel.setImage(vRam.getImage());
+
+        // Okno je připraveno pro zobrazení obrázků
     }
 
     private void initialize(){
@@ -80,7 +94,7 @@ public class MainWindow extends JPanel{
     private void openImage(){
 
         String userDir = System.getProperty("user.home");
-        JFileChooser fc = new JFileChooser(userDir +"/Desktop");
+        JFileChooser fc = new JFileChooser(userDir +"/Documents/.OSU/3s ZS/");
         fc.setDialogTitle("Load Image");
 
         if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -92,6 +106,7 @@ public class MainWindow extends JPanel{
                 BufferedImage temp = ImageIO.read(file);
 
                 if(temp != null){
+                    //TODO THIS IS THE ENTRY POINT
 
                     imagePanel.setImage(temp);
 
@@ -104,6 +119,62 @@ public class MainWindow extends JPanel{
 
                 e.printStackTrace();
             }
+        }
+    }
+
+    public V_RAM loadImageAsVRAM(){
+        BufferedImage image = loadImage();
+        showImage(image);
+        return convertBufferedToVRAM(image);
+    }
+
+    private BufferedImage loadImage(){
+
+        String userDir = System.getProperty("user.home");
+        JFileChooser fc = new JFileChooser(userDir +"/Documents/.OSU/3s ZS/GALP");
+        fc.setDialogTitle("Load Image");
+
+        if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+
+            File file = fc.getSelectedFile();
+
+            try {
+
+                return ImageIO.read(file);
+
+            }catch (IOException e){
+
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    private V_RAM convertBufferedToVRAM(BufferedImage image){
+        if (image==null) return new V_RAM(0,0);
+
+        V_RAM vRam = new V_RAM(image.getWidth(), image.getHeight());
+        //System.out.println(); //debug
+        for (int y = 0; y < vRam.getHeight(); y++) {
+            for (int x = 0; x < vRam.getWidth(); x++) {
+                vRam.setPixelsInt(x, y, image.getRGB(x, y));
+                //int[] rgb = vRam.getPixelRGB(x, y); //2 lines debug code prints values of image
+                //System.out.print(" | " + rgb[1] + ":" + rgb[2] + ":" + rgb[3]);
+            }
+            //System.out.print(" |\n"); //debug
+        }
+        //System.out.println(); //debug
+        return vRam;
+    }
+
+    public void showImage(BufferedImage bufferedImage){
+        if(bufferedImage != null){
+
+            imagePanel.setImage(bufferedImage);
+
+        }else {
+
+            JOptionPane.showMessageDialog(null, "Unable to load image", "Open image: ", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -131,8 +202,83 @@ public class MainWindow extends JPanel{
         }
     }
 
+    private static void delay(long millis){
+        if (millis < 0) {
+            System.out.println("Cannot wait for negative or 0 time.");
+            return;
+        }
+        if (millis == 0) return;
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e){
+            System.out.println("Thread interrupted.");
+            e.printStackTrace();
+        }
+    }
+
+    private static void delaySeconds(double seconds){
+        delay((long)(seconds * 1000d));
+    }
+
+    private static void confirm(){
+
+    }
+
+    public void runCv01(MainWindow mainWindow){
+        Cv01_RGB cv01Rgb = new Cv01_RGB();
+        double delay = 0.7;
+        mainWindow.imagePanel.setImage(cv01Rgb.solidWithBorder().getImage());
+        delaySeconds(delay);
+        mainWindow.imagePanel.setImage(cv01Rgb.redGreenGradientWithBlue().getImage());
+        delaySeconds(delay);
+        mainWindow.imagePanel.setImage(cv01Rgb.greenBlueGradient().getImage());
+        delaySeconds(delay);
+        mainWindow.imagePanel.setImage(cv01Rgb.redGreenBlueInMiddle().getImage());
+    }
+
     public static void main(String[] args) {
 
-        new MainWindow();
+        MainWindow window = new MainWindow();
+
+        // Spuštění úlohy KU1_TWO - kontextové zpracování šedotónového obrazu
+        //KU1_TWO ku1TWO = new KU1_TWO(window);
+        //ku1TWO.run();
+
+        // Spuštění úlohy KU1_ONE - odstranění červených očí
+        //cz.osu.tasks.KU1_ONE ku1 = new cz.osu.tasks.KU1_ONE(window);
+        //ku1.run();
+
+
+        /*V_RAM grayVram = Cv02_Images.grayscale(image);
+        window.showImage(image.getImage());
+        delaySeconds(0.5);
+        window.showImage(grayVram.getImage());
+        delaySeconds(0.5);*/
+
+        /*V_RAM blurred = new V_RAM(image.getImage());
+        Cv03_Convolution.convolution(blurred, Kernel.simpleBlurKernel(10));
+        window.showImage(blurred.getImage());*/
+
+        //delaySeconds(1);
+        /*hueShiftedImage = Cv02_Images.shiftHue(image,50);
+        window.showImage(hueShiftedImage.getImage());
+        delaySeconds(1);
+        hueShiftedImage = Cv02_Images.shiftHue(image,180);
+        window.showImage(hueShiftedImage.getImage());
+        delaySeconds(1);
+        hueShiftedImage = Cv02_Images.shiftHue(image,-180);
+        window.showImage(hueShiftedImage.getImage());
+        delaySeconds(1);
+        hueShiftedImage = Cv02_Images.shiftHue(image,1000);
+        window.showImage(hueShiftedImage.getImage());
+        delaySeconds(1);
+        hueShiftedImage = Cv02_Images.shiftHue(image,-2000);
+        window.showImage(hueShiftedImage.getImage());*/
     }
+
+    /*
+    private static V_RAM gridMerge(V_RAM[] vRams){
+
+    }*/
+
 }
