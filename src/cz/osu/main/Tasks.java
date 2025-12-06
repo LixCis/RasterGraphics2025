@@ -91,6 +91,22 @@ public class Tasks {
     }
 
     /**
+     * KU2_EXT2 - Animace přechodu mezi Bézierovými křivkami
+     */
+    public static class KU2_EXT2 implements RunnableExercise {
+        @Override
+        public String getDisplayName() {
+            return "KU2_EXT2 - Animace přechodu mezi křivkami";
+        }
+
+        @Override
+        public void execute(MainWindow mainWindow) {
+            cz.osu.tasks.KU2_EXT2 ku2ext2 = new cz.osu.tasks.KU2_EXT2(mainWindow);
+            ku2ext2.run();
+        }
+    }
+
+    /**
      * KU3 - TODO: Zatím neimplementováno
      */
     public static class KU3 implements RunnableExercise {

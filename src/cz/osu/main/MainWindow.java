@@ -138,6 +138,7 @@ public class MainWindow extends JPanel{
 		addTask(new Tasks.KU1_TWO());
 		addTask(new Tasks.KU2());
 		addTask(ku2ext1Wrapper); // Použít sdílenou instanci
+		addTask(new Tasks.KU2_EXT2());
 		addTask(new Tasks.KU3());
 	}
 
