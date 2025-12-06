@@ -32,11 +32,6 @@ public class Exercises {
 
             mainWindow.getImagePanel().setImage(cv01.redGreenBlueInMiddle().getImage());
         }
-
-        @Override
-        public boolean isDefault() {
-            return true;  // Tato úloha se spustí automaticky při startu
-        }
     }
 
     /**

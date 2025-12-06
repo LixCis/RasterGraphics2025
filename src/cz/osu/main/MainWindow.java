@@ -17,14 +17,17 @@ import java.util.List;
 
 public class MainWindow extends JPanel{
 
-    private ImagePanel imagePanel;
-    private List<RunnableExercise> exercises;
-    private List<RunnableExercise> tasks;
+	private ImagePanel imagePanel;
+	private List<RunnableExercise> exercises;
+	private List<RunnableExercise> tasks;
 
-    // Tracking běžících úloh
-    private Thread currentExerciseThread;
-    private RunnableExercise currentExercise;
-    private JLabel statusLabel;
+	// Tracking běžících úloh
+	private Thread currentExerciseThread;
+	private RunnableExercise currentExercise;
+	private JLabel statusLabel;
+
+	// Sdílená instance pro KU2_EXT1 wrapper (kvůli onInterrupt)
+	private final Tasks.KU2_EXT1 ku2ext1Wrapper = new Tasks.KU2_EXT1();
 
     public MainWindow(){
         exercises = new ArrayList<>();
@@ -119,23 +122,24 @@ public class MainWindow extends JPanel{
         return menuBar;
     }
 
-    private void registerExercisesAndTasks() {
-        // Registrace všech exercises
-        addExercise(new Exercises.CV01_RGB());
-        addExercise(new Exercises.CV02_Images());
-        addExercise(new Exercises.CV03_Convolution());
-        addExercise(new Exercises.CV04_Compression());
-        addExercise(new Exercises.CV05_LinesDrawing());
-        addExercise(new Exercises.CV06_Curves());
-        addExercise(new Exercises.CV07_AffineTransformations2D());
-        addExercise(new Exercises.Test01());
+	private void registerExercisesAndTasks() {
+		// Registrace všech exercises
+		addExercise(new Exercises.CV01_RGB());
+		addExercise(new Exercises.CV02_Images());
+		addExercise(new Exercises.CV03_Convolution());
+		addExercise(new Exercises.CV04_Compression());
+		addExercise(new Exercises.CV05_LinesDrawing());
+		addExercise(new Exercises.CV06_Curves());
+		addExercise(new Exercises.CV07_AffineTransformations2D());
+		addExercise(new Exercises.Test01());
 
-        // Registrace všech tasks
-        addTask(new Tasks.KU1_ONE());
-        addTask(new Tasks.KU1_TWO());
-        addTask(new Tasks.KU2());
-        addTask(new Tasks.KU3());
-    }
+		// Registrace všech tasks
+		addTask(new Tasks.KU1_ONE());
+		addTask(new Tasks.KU1_TWO());
+		addTask(new Tasks.KU2());
+		addTask(ku2ext1Wrapper); // Použít sdílenou instanci
+		addTask(new Tasks.KU3());
+	}
 
     private void populateMenu(JMenu menu, List<RunnableExercise> items) {
         menu.removeAll();
@@ -192,10 +196,12 @@ public class MainWindow extends JPanel{
 
     private void stopCurrentExercise() {
         if (currentExerciseThread != null && currentExerciseThread.isAlive()) {
-            System.out.println("Ukončuji předchozí úlohu: " + currentExercise.getDisplayName());
+            System.out.println("MainWindow.stopCurrentExercise() - Ukončuji předchozí úlohu: " + currentExercise.getDisplayName());
+            System.out.println("MainWindow.stopCurrentExercise() - currentExercise instance = " + currentExercise);
 
             // Zavolat onInterrupt callback
             if (currentExercise != null) {
+                System.out.println("MainWindow.stopCurrentExercise() - volám currentExercise.onInterrupt()");
                 currentExercise.onInterrupt();
             }
 
@@ -211,6 +217,8 @@ public class MainWindow extends JPanel{
 
             currentExercise = null;
             currentExerciseThread = null;
+        } else {
+            System.out.println("MainWindow.stopCurrentExercise() - žádná úloha neběží nebo není alive");
         }
     }
 
