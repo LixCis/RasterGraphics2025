@@ -157,16 +157,7 @@ public class KU2 {
 	}
 
 	private void drawPoint(V_RAM vRam, int x, int y, Color color) {
-		int size = 3;
-		for (int dy = -size; dy <= size; dy++) {
-			for (int dx = -size; dx <= size; dx++) {
-				int px = x + dx;
-				int py = y + dy;
-				if (px >= 0 && px < vRam.getWidth() && py >= 0 && py < vRam.getHeight()) {
-					vRam.setPixel(px, py, color.getRed(), color.getGreen(), color.getBlue());
-				}
-			}
-		}
+		Cv05_LinesDrawing.drawPoint(vRam, x, y, color, 3);
 	}
 
 	private void delay(long millis) {

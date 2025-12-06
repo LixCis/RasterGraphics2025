@@ -733,7 +733,7 @@ public class KU2_EXT1 {
 				Point currentPoint = new Point(px, py);
 
 				if (prevPoint != null) {
-					drawThickLine(vRam, prevPoint.x, prevPoint.y, currentPoint.x, currentPoint.y, color, thickness);
+					Cv05_LinesDrawing.drawThickLine(vRam, prevPoint.x, prevPoint.y, currentPoint.x, currentPoint.y, color, thickness);
 				}
 
 				prevPoint = currentPoint;
@@ -746,26 +746,7 @@ public class KU2_EXT1 {
 			if (fx >= 0 && fx < width && fy >= 0 && fy < height) {
 				Point finalPoint = new Point(fx, fy);
 				if (prevPoint != null) {
-					drawThickLine(vRam, prevPoint.x, prevPoint.y, finalPoint.x, finalPoint.y, color, thickness);
-				}
-			}
-		}
-	}
-
-	private void drawThickLine(V_RAM vRam, int x1, int y1, int x2, int y2, Color color, int thickness) {
-		int width = vRam.getWidth();
-		int height = vRam.getHeight();
-
-		for (int dy = -thickness/2; dy <= thickness/2; dy++) {
-			for (int dx = -thickness/2; dx <= thickness/2; dx++) {
-				int nx1 = x1 + dx;
-				int ny1 = y1 + dy;
-				int nx2 = x2 + dx;
-				int ny2 = y2 + dy;
-
-				if (nx1 >= 0 && nx1 < width && ny1 >= 0 && ny1 < height &&
-					nx2 >= 0 && nx2 < width && ny2 >= 0 && ny2 < height) {
-					Cv05_LinesDrawing.drawLine(vRam, nx1, ny1, nx2, ny2, color);
+					Cv05_LinesDrawing.drawThickLine(vRam, prevPoint.x, prevPoint.y, finalPoint.x, finalPoint.y, color, thickness);
 				}
 			}
 		}

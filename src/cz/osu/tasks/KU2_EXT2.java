@@ -198,21 +198,9 @@ public class KU2_EXT2 {
 			Cv05_LinesDrawing.drawLine(vRam, p.main.x, p.main.y,
 				p.rightHandle.x, p.rightHandle.y, new Color(150, 150, 255));
 
-			drawPoint(vRam, p.leftHandle.x, p.leftHandle.y, new Color(100, 100, 255), 3);
-			drawPoint(vRam, p.rightHandle.x, p.rightHandle.y, new Color(100, 100, 255), 3);
-			drawPoint(vRam, p.main.x, p.main.y, Color.RED, 5);
-		}
-	}
-
-	private void drawPoint(V_RAM vRam, int x, int y, Color color, int size) {
-		for (int dy = -size; dy <= size; dy++) {
-			for (int dx = -size; dx <= size; dx++) {
-				int px = x + dx;
-				int py = y + dy;
-				if (px >= 0 && px < vRam.getWidth() && py >= 0 && py < vRam.getHeight()) {
-					vRam.setPixel(px, py, color.getRed(), color.getGreen(), color.getBlue());
-				}
-			}
+			Cv05_LinesDrawing.drawPoint(vRam, p.leftHandle.x, p.leftHandle.y, new Color(100, 100, 255), 3);
+			Cv05_LinesDrawing.drawPoint(vRam, p.rightHandle.x, p.rightHandle.y, new Color(100, 100, 255), 3);
+			Cv05_LinesDrawing.drawPoint(vRam, p.main.x, p.main.y, Color.RED, 5);
 		}
 	}
 
@@ -254,7 +242,7 @@ public class KU2_EXT2 {
 				Point currentPoint = new Point((int) Math.round(x), (int) Math.round(y));
 
 				if (prevPoint != null) {
-					drawThickLine(vRam, prevPoint.x, prevPoint.y,
+					Cv05_LinesDrawing.drawThickLine(vRam, prevPoint.x, prevPoint.y,
 						currentPoint.x, currentPoint.y, color, thickness);
 				}
 
@@ -267,27 +255,8 @@ public class KU2_EXT2 {
 				(int) Math.round(qy0 + qy1 + qy2 + qy3)
 			);
 			if (prevPoint != null) {
-				drawThickLine(vRam, prevPoint.x, prevPoint.y,
+				Cv05_LinesDrawing.drawThickLine(vRam, prevPoint.x, prevPoint.y,
 					finalPoint.x, finalPoint.y, color, thickness);
-			}
-		}
-	}
-
-	private void drawThickLine(V_RAM vRam, int x1, int y1, int x2, int y2, Color color, int thickness) {
-		int width = vRam.getWidth();
-		int height = vRam.getHeight();
-
-		for (int dy = -thickness/2; dy <= thickness/2; dy++) {
-			for (int dx = -thickness/2; dx <= thickness/2; dx++) {
-				int nx1 = x1 + dx;
-				int ny1 = y1 + dy;
-				int nx2 = x2 + dx;
-				int ny2 = y2 + dy;
-
-				if (nx1 >= 0 && nx1 < width && ny1 >= 0 && ny1 < height &&
-					nx2 >= 0 && nx2 < width && ny2 >= 0 && ny2 < height) {
-					Cv05_LinesDrawing.drawLine(vRam, nx1, ny1, nx2, ny2, color);
-				}
 			}
 		}
 	}
