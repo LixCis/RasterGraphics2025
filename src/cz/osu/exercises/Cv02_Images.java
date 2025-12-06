@@ -1,7 +1,7 @@
 package cz.osu.exercises;
 
 import cz.osu.main.V_RAM;
-import cz.osu.utils.HLS;
+import cz.osu.utils.HSL;
 import cz.osu.utils.RGB;
 
 public class Cv02_Images {
@@ -17,9 +17,11 @@ public class Cv02_Images {
     }
 
     private static int shiftHue(int argb, float shift){
-        HLS hlsValue = new HLS(new RGB(argb));
-        hlsValue.hueShift(shift);
-        return hlsValue.toRGB();
+        HSL hsl = new HSL(new RGB(argb));
+        hsl.H = (hsl.H + shift) % 360;
+        if (hsl.H < 0) hsl.H += 360;
+        RGB rgb = new RGB(hsl);
+        return rgb.getARGB();
     }
 
     private static int[] disolveAsRGB(int rgb){

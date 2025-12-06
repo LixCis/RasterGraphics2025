@@ -26,11 +26,11 @@ public class Kernel {
         int sum = 0;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                if (pattern[y][x] == 0) continue; //TODO Does this line bring any benefit??
+                if (pattern[y][x] == 0) continue;
                 sum += pattern[y][x];
             }
         }
-        if (sum == 0) sum = 1; //TODO Is this correct??
+        if (sum == 0) sum = 1;
         divisor = sum;
     }
 }

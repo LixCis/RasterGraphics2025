@@ -12,39 +12,47 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainWindow extends JPanel{
 
     private ImagePanel imagePanel;
+    private List<RunnableExercise> exercises;
+    private List<RunnableExercise> tasks;
+
+    // Tracking běžících úloh
+    private Thread currentExerciseThread;
+    private RunnableExercise currentExercise;
+    private JLabel statusLabel;
 
     public MainWindow(){
+        exercises = new ArrayList<>();
+        tasks = new ArrayList<>();
 
         initialize();
+        registerExercisesAndTasks();
 
-        V_RAM vRam = new V_RAM(200, 200);
+        // Spustit default úlohu pokud existuje
+        SwingUtilities.invokeLater(this::runDefaultExercise);
+    }
 
-        Point2D p1 = new Point2D(15.6, 10.3);
-        Point p1i = p1.getPoint();
-        vRam.setPixel(p1i.x, p1i.y, 255, 255, 255);
+    private void runDefaultExercise() {
+        // Hledat default úlohu v exercises
+        for (RunnableExercise exercise : exercises) {
+            if (exercise.isDefault()) {
+                runExercise(exercise);
+                return;
+            }
+        }
 
-        Matrix2D t1 = Matrix2D.translate(6, 11);
-        Point2D p2 = t1.multiply(p1);
-        Point p2i = p2.getPoint();
-        vRam.setPixel(p2i.x, p2i.y, 0, 255, 0);
-
-        Matrix2D t2 = Matrix2D.rotate(10);
-        Point2D p3 = t2.multiply(p2);
-        Point p3i = p3.getPoint();
-        vRam.setPixel(p3i.x, p3i.y, 0, 0, 255);
-
-        Matrix2D total = t2.multiply(t1);
-        Point2D p4 = total.multiply(p1);
-        Point p4i = p4.getPoint();
-        vRam.setPixel(p4i.x, p4i.y, 0, 255, 255);
-
-        imagePanel.setImage(vRam.getImage());
-
-        // Okno je připraveno pro zobrazení obrázků
+        // Pokud není v exercises, hledat v tasks
+        for (RunnableExercise task : tasks) {
+            if (task.isDefault()) {
+                runExercise(task);
+                return;
+            }
+        }
     }
 
     private void initialize(){
@@ -56,6 +64,13 @@ public class MainWindow extends JPanel{
         imagePanel = new ImagePanel();
         imagePanel.setBounds(10,60, 970, 600);
         this.add(imagePanel);
+
+        // Status label pro zobrazení běžící úlohy
+        statusLabel = new JLabel("Žádná úloha neběží");
+        statusLabel.setBounds(290, 10, 400, 30);
+        statusLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        statusLabel.setForeground(new Color(60, 60, 60));
+        this.add(statusLabel);
 
         //open image
         JButton button = new JButton();
@@ -85,10 +100,136 @@ public class MainWindow extends JPanel{
 
         JFrame frame = new JFrame("Raster Graphics");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setJMenuBar(createMenuBar());
         frame.getContentPane().add(this);
         frame.setSize(1004, 705);
         frame.setResizable(false);
         frame.setVisible(true);
+    }
+
+    private JMenuBar createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+
+        JMenu exercisesMenu = new JMenu("Exercises");
+        JMenu tasksMenu = new JMenu("Tasks");
+
+        menuBar.add(exercisesMenu);
+        menuBar.add(tasksMenu);
+
+        return menuBar;
+    }
+
+    private void registerExercisesAndTasks() {
+        // Registrace všech exercises
+        addExercise(new Exercises.CV01_RGB());
+        addExercise(new Exercises.CV02_Images());
+        addExercise(new Exercises.CV03_Convolution());
+        addExercise(new Exercises.CV04_Compression());
+        addExercise(new Exercises.CV05_LinesDrawing());
+        addExercise(new Exercises.CV06_Curves());
+        addExercise(new Exercises.CV07_AffineTransformations2D());
+        addExercise(new Exercises.Test01());
+
+        // Registrace všech tasks
+        addTask(new Tasks.KU1_ONE());
+        addTask(new Tasks.KU1_TWO());
+        addTask(new Tasks.KU2());
+        addTask(new Tasks.KU3());
+    }
+
+    private void populateMenu(JMenu menu, List<RunnableExercise> items) {
+        menu.removeAll();
+
+        for (RunnableExercise item : items) {
+            JMenuItem menuItem = new JMenuItem(item.getDisplayName());
+            menuItem.addActionListener(e -> runExercise(item));
+            menu.add(menuItem);
+        }
+
+        if (items.isEmpty()) {
+            JMenuItem emptyItem = new JMenuItem("(žádné úlohy)");
+            emptyItem.setEnabled(false);
+            menu.add(emptyItem);
+        }
+    }
+
+    private void runExercise(RunnableExercise exercise) {
+        // Ukončit předchozí úlohu pokud běží
+        stopCurrentExercise();
+
+        // Aktualizovat status
+        statusLabel.setText("Běží: " + exercise.getDisplayName());
+        statusLabel.setForeground(new Color(0, 128, 0));
+
+        // Spustit novou úlohu v samostatném vlákně
+        currentExercise = exercise;
+        currentExerciseThread = new Thread(() -> {
+            try {
+                exercise.execute(this);
+            } catch (Exception e) {
+                if (!(e instanceof InterruptedException)) {
+                    e.printStackTrace();
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(this,
+                            "Chyba při běhu úlohy: " + e.getMessage(),
+                            "Chyba",
+                            JOptionPane.ERROR_MESSAGE);
+                    });
+                }
+            } finally {
+                SwingUtilities.invokeLater(() -> {
+                    if (currentExercise == exercise) {
+                        statusLabel.setText("Dokončeno: " + exercise.getDisplayName());
+                        statusLabel.setForeground(new Color(60, 60, 60));
+                        currentExercise = null;
+                        currentExerciseThread = null;
+                    }
+                });
+            }
+        });
+        currentExerciseThread.start();
+    }
+
+    private void stopCurrentExercise() {
+        if (currentExerciseThread != null && currentExerciseThread.isAlive()) {
+            System.out.println("Ukončuji předchozí úlohu: " + currentExercise.getDisplayName());
+
+            // Zavolat onInterrupt callback
+            if (currentExercise != null) {
+                currentExercise.onInterrupt();
+            }
+
+            // Přerušit thread
+            currentExerciseThread.interrupt();
+
+            try {
+                // Počkat max 500ms na ukončení
+                currentExerciseThread.join(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            currentExercise = null;
+            currentExerciseThread = null;
+        }
+    }
+
+    public void addExercise(RunnableExercise exercise) {
+        exercises.add(exercise);
+        updateMenus();
+    }
+
+    public void addTask(RunnableExercise task) {
+        tasks.add(task);
+        updateMenus();
+    }
+
+    private void updateMenus() {
+        JMenuBar menuBar = ((JFrame) SwingUtilities.getWindowAncestor(this)).getJMenuBar();
+        if (menuBar != null && menuBar.getMenuCount() >= 2) {
+            populateMenu(menuBar.getMenu(0), exercises);
+            populateMenu(menuBar.getMenu(1), tasks);
+        }
     }
 
     private void openImage(){
@@ -122,28 +263,47 @@ public class MainWindow extends JPanel{
         }
     }
 
+    /**
+     * Thread-safe metoda pro načtení obrázku jako V_RAM
+     * Lze volat z exercise threadu
+     */
     public V_RAM loadImageAsVRAM(){
         BufferedImage image = loadImage();
-        showImage(image);
+        if (image != null) {
+            showImage(image);
+        }
         return convertBufferedToVRAM(image);
     }
 
-    private BufferedImage loadImage(){
+    /**
+     * Thread-safe metoda pro načtení obrázku
+     * Lze volat z exercise threadu
+     */
+    public BufferedImage loadImage(){
+        if (SwingUtilities.isEventDispatchThread()) {
+            return loadImageInternal();
+        } else {
+            final BufferedImage[] result = new BufferedImage[1];
+            try {
+                SwingUtilities.invokeAndWait(() -> result[0] = loadImageInternal());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return result[0];
+        }
+    }
 
+    private BufferedImage loadImageInternal(){
         String userDir = System.getProperty("user.home");
         JFileChooser fc = new JFileChooser(userDir +"/Documents/.OSU/3s ZS/GALP");
         fc.setDialogTitle("Load Image");
 
         if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-
             File file = fc.getSelectedFile();
 
             try {
-
                 return ImageIO.read(file);
-
             }catch (IOException e){
-
                 e.printStackTrace();
             }
         }
@@ -212,7 +372,8 @@ public class MainWindow extends JPanel{
             Thread.sleep(millis);
         } catch (InterruptedException e){
             System.out.println("Thread interrupted.");
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);  // Propagovat přerušení
         }
     }
 
@@ -224,61 +385,13 @@ public class MainWindow extends JPanel{
 
     }
 
-    public void runCv01(MainWindow mainWindow){
-        Cv01_RGB cv01Rgb = new Cv01_RGB();
-        double delay = 0.7;
-        mainWindow.imagePanel.setImage(cv01Rgb.solidWithBorder().getImage());
-        delaySeconds(delay);
-        mainWindow.imagePanel.setImage(cv01Rgb.redGreenGradientWithBlue().getImage());
-        delaySeconds(delay);
-        mainWindow.imagePanel.setImage(cv01Rgb.greenBlueGradient().getImage());
-        delaySeconds(delay);
-        mainWindow.imagePanel.setImage(cv01Rgb.redGreenBlueInMiddle().getImage());
+    public ImagePanel getImagePanel() {
+        return imagePanel;
     }
 
     public static void main(String[] args) {
-
-        MainWindow window = new MainWindow();
-
-        // Spuštění úlohy KU1_TWO - kontextové zpracování šedotónového obrazu
-        //KU1_TWO ku1TWO = new KU1_TWO(window);
-        //ku1TWO.run();
-
-        // Spuštění úlohy KU1_ONE - odstranění červených očí
-        //cz.osu.tasks.KU1_ONE ku1 = new cz.osu.tasks.KU1_ONE(window);
-        //ku1.run();
-
-
-        /*V_RAM grayVram = Cv02_Images.grayscale(image);
-        window.showImage(image.getImage());
-        delaySeconds(0.5);
-        window.showImage(grayVram.getImage());
-        delaySeconds(0.5);*/
-
-        /*V_RAM blurred = new V_RAM(image.getImage());
-        Cv03_Convolution.convolution(blurred, Kernel.simpleBlurKernel(10));
-        window.showImage(blurred.getImage());*/
-
-        //delaySeconds(1);
-        /*hueShiftedImage = Cv02_Images.shiftHue(image,50);
-        window.showImage(hueShiftedImage.getImage());
-        delaySeconds(1);
-        hueShiftedImage = Cv02_Images.shiftHue(image,180);
-        window.showImage(hueShiftedImage.getImage());
-        delaySeconds(1);
-        hueShiftedImage = Cv02_Images.shiftHue(image,-180);
-        window.showImage(hueShiftedImage.getImage());
-        delaySeconds(1);
-        hueShiftedImage = Cv02_Images.shiftHue(image,1000);
-        window.showImage(hueShiftedImage.getImage());
-        delaySeconds(1);
-        hueShiftedImage = Cv02_Images.shiftHue(image,-2000);
-        window.showImage(hueShiftedImage.getImage());*/
+        SwingUtilities.invokeLater(() -> {
+            MainWindow window = new MainWindow();
+        });
     }
-
-    /*
-    private static V_RAM gridMerge(V_RAM[] vRams){
-
-    }*/
-
 }

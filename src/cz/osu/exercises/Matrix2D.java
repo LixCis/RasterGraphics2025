@@ -47,6 +47,24 @@ public class Matrix2D {
         return result;
     }
 
+    public static Matrix2D rotate(double degrees, Point2D pivot){
+        // Rotate around pivot point: translate to origin, rotate, translate back
+        Matrix2D translateToOrigin = translate(-pivot.x, -pivot.y);
+        Matrix2D rotation = rotate(degrees);
+        Matrix2D translateBack = translate(pivot.x, pivot.y);
+        return translateBack.multiply(rotation).multiply(translateToOrigin);
+    }
+
+    public static Matrix2D scale(double sx, double sy, Point2D pivot){
+        // Scale around pivot point: translate to origin, scale, translate back
+        Matrix2D translateToOrigin = translate(-pivot.x, -pivot.y);
+        Matrix2D scaleMatrix = Matrix2D.identity();
+        scaleMatrix.a1 = sx;
+        scaleMatrix.b2 = sy;
+        Matrix2D translateBack = translate(pivot.x, pivot.y);
+        return translateBack.multiply(scaleMatrix).multiply(translateToOrigin);
+    }
+
     public Point2D multiply(Point2D point){
         double xn = a1 * point.x + a2 * point.y + a3 * point.a;
         double yn = b1 * point.x + b2 * point.y + b3 * point.a;
