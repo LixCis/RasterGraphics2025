@@ -40,18 +40,18 @@ public class Tasks {
     }
 
     /**
-     * KU2 - TODO: Zatím neimplementováno
+     * KU2 - Kreslení spline pomocí kubických Bézierových křivek
      */
     public static class KU2 implements RunnableExercise {
         @Override
         public String getDisplayName() {
-            return "KU2 (TODO)";
+            return "KU2 - Kreslení spline (kubické Bézierovy křivky)";
         }
 
         @Override
         public void execute(MainWindow mainWindow) {
-            System.out.println("KU2 zatím není implementováno");
-            // TODO: Implementace KU2
+            cz.osu.tasks.KU2 ku2 = new cz.osu.tasks.KU2(mainWindow);
+            ku2.run();
         }
     }
 
