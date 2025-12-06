@@ -26,7 +26,7 @@ public class MainWindow extends JPanel{
 	private RunnableExercise currentExercise;
 	private JLabel statusLabel;
 
-	// Sdílená instance pro KU2_EXT1 wrapper (kvůli onInterrupt)
+	// Sdílená instance pro KU2_EXT1 wrapper
 	private final Tasks.KU2_EXT1 ku2ext1Wrapper = new Tasks.KU2_EXT1();
 
     public MainWindow(){
@@ -36,12 +36,11 @@ public class MainWindow extends JPanel{
         initialize();
         registerExercisesAndTasks();
 
-        // Spustit default úlohu pokud existuje
+        // Spustit default úlohu
         SwingUtilities.invokeLater(this::runDefaultExercise);
     }
 
     private void runDefaultExercise() {
-        // Hledat default úlohu v exercises
         for (RunnableExercise exercise : exercises) {
             if (exercise.isDefault()) {
                 runExercise(exercise);
@@ -49,7 +48,6 @@ public class MainWindow extends JPanel{
             }
         }
 
-        // Pokud není v exercises, hledat v tasks
         for (RunnableExercise task : tasks) {
             if (task.isDefault()) {
                 runExercise(task);
@@ -137,7 +135,7 @@ public class MainWindow extends JPanel{
 		addTask(new Tasks.KU1_ONE());
 		addTask(new Tasks.KU1_TWO());
 		addTask(new Tasks.KU2());
-		addTask(ku2ext1Wrapper); // Použít sdílenou instanci
+		addTask(ku2ext1Wrapper);
 		addTask(new Tasks.KU2_EXT2());
 		addTask(new Tasks.KU3());
 	}
@@ -159,14 +157,11 @@ public class MainWindow extends JPanel{
     }
 
     private void runExercise(RunnableExercise exercise) {
-        // Ukončit předchozí úlohu pokud běží
         stopCurrentExercise();
 
-        // Aktualizovat status
         statusLabel.setText("Běží: " + exercise.getDisplayName());
         statusLabel.setForeground(new Color(0, 128, 0));
 
-        // Spustit novou úlohu v samostatném vlákně
         currentExercise = exercise;
         currentExerciseThread = new Thread(() -> {
             try {
@@ -200,17 +195,14 @@ public class MainWindow extends JPanel{
             System.out.println("MainWindow.stopCurrentExercise() - Ukončuji předchozí úlohu: " + currentExercise.getDisplayName());
             System.out.println("MainWindow.stopCurrentExercise() - currentExercise instance = " + currentExercise);
 
-            // Zavolat onInterrupt callback
             if (currentExercise != null) {
                 System.out.println("MainWindow.stopCurrentExercise() - volám currentExercise.onInterrupt()");
                 currentExercise.onInterrupt();
             }
 
-            // Přerušit thread
             currentExerciseThread.interrupt();
 
             try {
-                // Počkat max 500ms na ukončení
                 currentExerciseThread.join(500);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -274,7 +266,6 @@ public class MainWindow extends JPanel{
 
     /**
      * Thread-safe metoda pro načtení obrázku jako V_RAM
-     * Lze volat z exercise threadu
      */
     public V_RAM loadImageAsVRAM(){
         BufferedImage image = loadImage();
@@ -286,7 +277,6 @@ public class MainWindow extends JPanel{
 
     /**
      * Thread-safe metoda pro načtení obrázku
-     * Lze volat z exercise threadu
      */
     public BufferedImage loadImage(){
         if (SwingUtilities.isEventDispatchThread()) {

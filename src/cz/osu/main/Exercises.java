@@ -85,7 +85,6 @@ public class Exercises {
             System.out.println("CV02: Hue shift +180");
             delaySeconds(delay);
 
-            // Zpět na původní
             mainWindow.showImage(image.getImage());
             System.out.println("CV02: Zpět na původní");
         }
@@ -139,7 +138,6 @@ public class Exercises {
             System.out.println("CV03: Blur 10x10");
             delaySeconds(delay);
 
-            // Zpět na původní
             mainWindow.showImage(image.getImage());
             System.out.println("CV03: Zpět na původní");
         }
@@ -174,7 +172,6 @@ public class Exercises {
             V_RAM vRam = new V_RAM(400, 400);
             double delay = 0.8;
 
-            // Nakreslit různé čáry
             System.out.println("CV05: Kreslení čar pomocí DDA algoritmu");
 
             // Horizontální čára
@@ -288,7 +285,6 @@ public class Exercises {
             System.out.println("CV07: Původní čtverec");
             delaySeconds(delay);
 
-            // Získat body čtverce pro transformace
             java.util.ArrayList<cz.osu.exercises.Point2D> square =
                 cz.osu.exercises.Cv07_AffineTransformations2D.getSquare(p1, p3);
 
@@ -374,7 +370,7 @@ public class Exercises {
             vRam.setPixel(p4i.x, p4i.y, 0, 255, 255);
             System.out.println("p4 (cyan) = (rotate(10) * translate(6,11)) * p1: (" + p4i.x + ", " + p4i.y + ")");
 
-            // Ověření: p3 a p4 by měly být na stejné pozici
+            // Ověření
             if (p3i.x == p4i.x && p3i.y == p4i.y) {
                 System.out.println("✓ Test úspěšný: p3 == p4 (maticová multiplikace funguje správně)");
             } else {
@@ -388,14 +384,12 @@ public class Exercises {
         }
     }
 
-    // Pomocná metoda pro delay
-    // Pokud je thread přerušen (interrupt), vyhodí InterruptedException
     private static void delaySeconds(double seconds) {
         try {
             Thread.sleep((long)(seconds * 1000d));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException(e);  // Propagovat přerušení
+            throw new RuntimeException(e);
         }
     }
 }

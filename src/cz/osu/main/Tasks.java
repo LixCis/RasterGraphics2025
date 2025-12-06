@@ -86,7 +86,7 @@ public class Tasks {
 
         @Override
         public boolean isDefault() {
-            return true;  // Tato úloha se spustí automaticky při startu
+            return true;
         }
     }
 
@@ -107,7 +107,7 @@ public class Tasks {
     }
 
     /**
-     * KU3 - TODO: Zatím neimplementováno
+     * KU3 - TODO
      */
     public static class KU3 implements RunnableExercise {
         @Override
@@ -117,8 +117,8 @@ public class Tasks {
 
         @Override
         public void execute(MainWindow mainWindow) {
-            System.out.println("KU3 zatím není implementováno");
-            // TODO: Implementace KU3
+            System.out.println("KU3 zatím není");
+            // TODO
         }
     }
 }

@@ -13,9 +13,6 @@ import java.util.List;
 
 /**
  * KU2_EXT1 - Editor písmenového fontu pomocí Bézierových křivek
- *
- * Interaktivní editor pro tvorbu písmen pomocí kubických Bézierových křivek.
- * Umožňuje úpravu kontrolních bodů a vodítek (handles) myší a ukládání/načítání z JSON.
  */
 public class KU2_EXT1 {
 	private final MainWindow mainWindow;
@@ -29,24 +26,20 @@ public class KU2_EXT1 {
 	private static final int CANVAS_WIDTH = 600;
 	private static final int CANVAS_HEIGHT = 600;
 	private boolean showHandles = true;
-	private boolean closedCurve = false; // Uzavřená křivka (spojuje konec se začátkem)
-	private JFrame editorFrame; // Reference na editor okno pro možnost zavření
+	private boolean closedCurve = false;
+	private JFrame editorFrame;
 
 	enum HandleType {
 		NONE, MAIN, LEFT_HANDLE, RIGHT_HANDLE, BOTH_HANDLES
 	}
 
-	/**
-	 * Bod s vodítky pro Bézierovu křivku
-	 */
 	class CurvePoint {
-		Point main;        // Hlavní bod
-		Point leftHandle;  // Levé vodítko (L)
-		Point rightHandle; // Pravé vodítko (R)
+		Point main;
+		Point leftHandle;
+		Point rightHandle;
 
 		CurvePoint(int x, int y) {
 			this.main = new Point(x, y);
-			// Výchozí vodítka - automaticky vypočítaná
 			this.leftHandle = new Point(x - 40, y);
 			this.rightHandle = new Point(x + 40, y);
 		}
@@ -57,9 +50,6 @@ public class KU2_EXT1 {
 			this.rightHandle = rightHandle;
 		}
 
-		/**
-		 * Resetování handleru na výchozí pozici
-		 */
 		void resetHandles() {
 			this.leftHandle = new Point(main.x, main.y);
 			this.rightHandle = new Point(main.x, main.y);
@@ -97,11 +87,8 @@ public class KU2_EXT1 {
 			createDefaultSPoints();
 		}
 
-		// Vytvoř editor okno
 		createEditorWindow();
 
-		// Čekej, dokud není thread přerušen
-		// Editor běží v samostatném okně, ale tento thread musí zůstat živý
 		try {
 			System.out.println("KU2_EXT1.run() - čekám na přerušení...");
 			while (!Thread.currentThread().isInterrupted()) {
@@ -115,22 +102,16 @@ public class KU2_EXT1 {
 		}
 	}
 
-	/**
-	 * Vytvoření výchozích bodů pro písmeno S
-	 */
 	private void createDefaultSPoints() {
 		controlPoints.add(new CurvePoint(300, 150));
 	}
 
-	/**
-	 * Přepočítání všech vodítek automaticky
-	 */
+	// Přepočítání všech vodítek automaticky
 	private void recalculateAllHandles() {
 		int n = controlPoints.size();
-		if (n < 2) return; // Potřebujeme alespoň 2 body
+		if (n < 2) return;
 
 		if (n == 2) {
-			// Pro 2 body vypočítej jednoduché vodítka
 			CurvePoint p0 = controlPoints.get(0);
 			CurvePoint p1 = controlPoints.get(1);
 
@@ -157,18 +138,15 @@ public class KU2_EXT1 {
 			return;
 		}
 
-		// Pro 3+ bodů použij fantomové body nebo uzavřenou křivku
 		for (int i = 0; i < n; i++) {
 			CurvePoint prev, curr, next;
 
 			curr = controlPoints.get(i);
 
 			if (closedCurve) {
-				// Pro uzavřenou křivku použij modulo
 				prev = controlPoints.get((i - 1 + n) % n);
 				next = controlPoints.get((i + 1) % n);
 			} else {
-				// Pro otevřenou křivku použij fantomové body na koncích
 				if (i == 0) {
 					prev = controlPoints.get(0);
 				} else {
@@ -186,9 +164,6 @@ public class KU2_EXT1 {
 		}
 	}
 
-	/**
-	 * Načtení bodů z JSON souboru
-	 */
 	private void loadPoints() {
 		File file = new File(SAVE_FILE);
 		if (!file.exists()) {
@@ -204,7 +179,6 @@ public class KU2_EXT1 {
 
 			String content = json.toString();
 
-			// Najdi začátek pole points
 			int pointsStart = content.indexOf("[");
 			int pointsEnd = content.lastIndexOf("]");
 
@@ -212,7 +186,7 @@ public class KU2_EXT1 {
 				throw new Exception("Neplatný formát JSON");
 			}
 
-			// Načtení příznaku closedCurve (pokud existuje)
+			// Načtení příznaku closedCurve
 			int closedCurvePos = content.indexOf("\"closedCurve\"");
 			if (closedCurvePos != -1) {
 				int colonPos = content.indexOf(":", closedCurvePos);
@@ -227,7 +201,6 @@ public class KU2_EXT1 {
 			String pointsArray = content.substring(pointsStart + 1, pointsEnd);
 			controlPoints.clear();
 
-			// Parsování jednotlivých objektů
 			int depth = 0;
 			StringBuilder currentObject = new StringBuilder();
 
@@ -240,7 +213,6 @@ public class KU2_EXT1 {
 				} else if (c == '}') {
 					depth--;
 					if (depth == 0 && currentObject.length() > 0) {
-						// Parsuj tento objekt
 						parsePointObject(currentObject.toString());
 					}
 				} else if (depth > 0) {
@@ -250,7 +222,6 @@ public class KU2_EXT1 {
 
 			System.out.println("Načteno " + controlPoints.size() + " bodů z " + SAVE_FILE);
 
-			// Pokud body nemají vodítka, vypočítej je
 			if (!controlPoints.isEmpty() && controlPoints.get(0).leftHandle == null) {
 				recalculateAllHandles();
 			}
@@ -261,9 +232,6 @@ public class KU2_EXT1 {
 		}
 	}
 
-	/**
-	 * Parsování jednoho bodu z JSON objektu
-	 */
 	private void parsePointObject(String objStr) {
 		try {
 			Integer x = null, y = null;
@@ -291,14 +259,12 @@ public class KU2_EXT1 {
 
 			if (x != null && y != null) {
 				if (lx != null && ly != null && rx != null && ry != null) {
-					// S vodítky
 					controlPoints.add(new CurvePoint(
 						new Point(x, y),
 						new Point(lx, ly),
 						new Point(rx, ry)
 					));
 				} else {
-					// Bez vodítek
 					controlPoints.add(new CurvePoint(x, y));
 				}
 			}
@@ -307,9 +273,6 @@ public class KU2_EXT1 {
 		}
 	}
 
-	/**
-	 * Uložení bodů do JSON souboru
-	 */
 	private void savePoints() {
 		try (PrintWriter writer = new PrintWriter(new FileWriter(SAVE_FILE))) {
 			writer.println("{");
@@ -436,7 +399,6 @@ public class KU2_EXT1 {
 					g2d.fillOval(p.main.x - POINT_RADIUS, p.main.y - POINT_RADIUS,
 							POINT_RADIUS * 2, POINT_RADIUS * 2);
 
-					// Číslo bodu
 					g2d.setColor(Color.BLACK);
 					g2d.setFont(new Font("Arial", Font.PLAIN, 10));
 					g2d.drawString(String.valueOf(i), p.main.x + POINT_RADIUS + 2, p.main.y - POINT_RADIUS);
@@ -446,7 +408,6 @@ public class KU2_EXT1 {
 
 		drawPanel.setBackground(Color.WHITE);
 
-		// Mouse listener pro editaci bodů
 		MouseAdapter mouseAdapter = new MouseAdapter() {
 			private int getOffsetX() {
 				return (drawPanel.getWidth() - CANVAS_WIDTH) / 2;
@@ -470,12 +431,10 @@ public class KU2_EXT1 {
 				int canvasY = toCanvasY(e.getY());
 				boolean ctrlPressed = e.isControlDown();
 
-				// Nejprve hledej vodítka, pak hlavní body
 				for (int i = 0; i < controlPoints.size(); i++) {
 					CurvePoint p = controlPoints.get(i);
 
 					if (showHandles) {
-						// Levé vodítko
 						if (isNear(canvasX, canvasY, p.leftHandle.x, p.leftHandle.y, HANDLE_RADIUS)) {
 							selectedPoint = p;
 							selectedIndex = i;
@@ -484,7 +443,6 @@ public class KU2_EXT1 {
 							return;
 						}
 
-						// Pravé vodítko
 						if (isNear(canvasX, canvasY, p.rightHandle.x, p.rightHandle.y, HANDLE_RADIUS)) {
 							selectedPoint = p;
 							selectedIndex = i;
@@ -520,7 +478,6 @@ public class KU2_EXT1 {
 
 					switch (selectedHandle) {
 						case MAIN:
-							// Posuň hlavní bod i vodítka
 							int dx = clampedX - selectedPoint.main.x;
 							int dy = clampedY - selectedPoint.main.y;
 							selectedPoint.main.x = clampedX;
@@ -539,15 +496,13 @@ public class KU2_EXT1 {
 							selectedPoint.rightHandle.y = clampedY;
 							break;
 						case BOTH_HANDLES:
-							// Symetrický pohyb obou handlers - myš ovládá směr
+							// Symetrické vodítka
 							int deltaX = clampedX - selectedPoint.main.x;
 							int deltaY = clampedY - selectedPoint.main.y;
 
-							// Pravý handle jde tam, kam je myš
 							selectedPoint.rightHandle.x = clampedX;
 							selectedPoint.rightHandle.y = clampedY;
 
-							// Levý handle jde na opačnou stranu symetricky
 							selectedPoint.leftHandle.x = clamp(selectedPoint.main.x - deltaX, 0, CANVAS_WIDTH - 1);
 							selectedPoint.leftHandle.y = clamp(selectedPoint.main.y - deltaY, 0, CANVAS_HEIGHT - 1);
 							break;
@@ -594,7 +549,6 @@ public class KU2_EXT1 {
 
 		JButton addButton = new JButton("Přidat bod");
 		addButton.addActionListener(e -> {
-			// Přidat nový bod bez přepočítávání existujících handlers
 			controlPoints.add(new CurvePoint(150, 150));
 			drawPanel.repaint();
 			updateMainWindow();
@@ -665,13 +619,9 @@ public class KU2_EXT1 {
 
 		editorFrame.setVisible(true);
 
-		// Počáteční vykreslení
 		updateMainWindow();
 	}
 
-	/**
-	 * Aktualizace hlavního okna s výsledným písmem
-	 */
 	private void updateMainWindow() {
 		V_RAM vRam = new V_RAM(CANVAS_WIDTH, CANVAS_HEIGHT);
 		clearBackground(vRam, Color.WHITE);
@@ -683,9 +633,7 @@ public class KU2_EXT1 {
 		mainWindow.showImage(vRam.getImage());
 	}
 
-	/**
-	 * Vykreslení spline na Graphics2D (pro editor)
-	 */
+	// Vykreslení spline na Graphics2D (pro editor)
 	private void drawSplineOnGraphics(Graphics2D g2d, List<CurvePoint> points, Color color) {
 		int n = points.size();
 		if (n < 2) return;
@@ -693,18 +641,15 @@ public class KU2_EXT1 {
 		g2d.setColor(color);
 		g2d.setStroke(new BasicStroke(2));
 
-		// Definice a vykreslení segmentů
 		double step = 0.01;
-
-		int segments = closedCurve ? n : n - 1; // Pokud uzavřená, přidáme segment z posledního do prvního
+		int segments = closedCurve ? n : n - 1;
 
 		for (int i = 0; i < segments; i++) {
 			CurvePoint p0 = points.get(i);
-			CurvePoint p1 = points.get((i + 1) % n); // Modulo pro uzavřenou křivku
+			CurvePoint p1 = points.get((i + 1) % n);
 
-			// 4 kontrolní body pro kubickou Bézierovu křivku
-			Point cp0 = p0.main;           // Začátek
-			Point cp1 = p0.rightHandle;    // Pravé vodítko prvního bodu
+			Point cp0 = p0.main;
+			Point cp1 = p0.rightHandle;
 			Point cp2 = p1.leftHandle;     // Levé vodítko druhého bodu
 			Point cp3 = p1.main;           // Konec
 
@@ -738,9 +683,7 @@ public class KU2_EXT1 {
 		}
 	}
 
-	/**
-	 * Vykreslení spline do V_RAM
-	 */
+	// Vykreslení spline do V_RAM
 	private void drawSplineVRAM(V_RAM vRam, List<CurvePoint> points, Color color, int thickness) {
 		int n = points.size();
 		if (n < 2) return;
@@ -748,22 +691,19 @@ public class KU2_EXT1 {
 		int width = vRam.getWidth();
 		int height = vRam.getHeight();
 
-		// Definice a vykreslení segmentů
 		double step = 0.005;
-
-		int segments = closedCurve ? n : n - 1; // Pokud uzavřená, přidáme segment z posledního do prvního
+		int segments = closedCurve ? n : n - 1;
 
 		for (int i = 0; i < segments; i++) {
 			CurvePoint p0 = points.get(i);
-			CurvePoint p1 = points.get((i + 1) % n); // Modulo pro uzavřenou křivku
+			CurvePoint p1 = points.get((i + 1) % n);
 
-			// 4 kontrolní body
 			Point cp0 = p0.main;
 			Point cp1 = p0.rightHandle;
 			Point cp2 = p1.leftHandle;
 			Point cp3 = p1.main;
 
-			// Pre-kalkulace koeficientů
+			// Koeficienty Bézierovy křivky
 			double qx0 = cp0.x;
 			double qy0 = cp0.y;
 			double qx1 = 3 * (cp1.x - cp0.x);
@@ -812,9 +752,6 @@ public class KU2_EXT1 {
 		}
 	}
 
-	/**
-	 * Kreslení tlustší čáry
-	 */
 	private void drawThickLine(V_RAM vRam, int x1, int y1, int x2, int y2, Color color, int thickness) {
 		int width = vRam.getWidth();
 		int height = vRam.getHeight();
@@ -826,7 +763,6 @@ public class KU2_EXT1 {
 				int nx2 = x2 + dx;
 				int ny2 = y2 + dy;
 
-				// Bounds checking - kreslí jen pokud jsou OBA body v rozsahu
 				if (nx1 >= 0 && nx1 < width && ny1 >= 0 && ny1 < height &&
 					nx2 >= 0 && nx2 < width && ny2 >= 0 && ny2 < height) {
 					Cv05_LinesDrawing.drawLine(vRam, nx1, ny1, nx2, ny2, color);
@@ -835,16 +771,10 @@ public class KU2_EXT1 {
 		}
 	}
 
-	/**
-	 * Omezení hodnoty na daný rozsah
-	 */
 	private int clamp(int value, int min, int max) {
 		return Math.max(min, Math.min(max, value));
 	}
 
-	/**
-	 * Vyčištění pozadí
-	 */
 	private void clearBackground(V_RAM vRam, Color color) {
 		for (int y = 0; y < vRam.getHeight(); y++) {
 			for (int x = 0; x < vRam.getWidth(); x++) {
@@ -853,9 +783,6 @@ public class KU2_EXT1 {
 		}
 	}
 
-	/**
-	 * Zavření editoru při přerušení úlohy
-	 */
 	public void dispose() {
 		System.out.println("KU2_EXT1.dispose() - zavírám editor");
 		if (editorFrame != null) {

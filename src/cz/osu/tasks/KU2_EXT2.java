@@ -10,21 +10,16 @@ import java.util.List;
 
 /**
  * KU2_EXT2 - Animace přechodu mezi dvěma Bézierovými křivkami
- *
- * Demonstruje plynulou interpolaci mezi dvěma vlnkami pomocí kubických Bézierových křivek.
  */
 public class KU2_EXT2 {
 	private final MainWindow mainWindow;
 	private static final int WIDTH = 800;
 	private static final int HEIGHT = 600;
 
-	/**
-	 * Bod s vodítky pro Bézierovu křivku
-	 */
 	static class CurvePoint {
-		Point main;        // Hlavní bod
-		Point leftHandle;  // Levé vodítko (L)
-		Point rightHandle; // Pravé vodítko (R)
+		Point main;
+		Point leftHandle;
+		Point rightHandle;
 
 		CurvePoint(int x, int y, int lx, int ly, int rx, int ry) {
 			this.main = new Point(x, y);
@@ -38,9 +33,6 @@ public class KU2_EXT2 {
 			this.rightHandle = rightHandle;
 		}
 
-		/**
-		 * Lineární interpolace mezi dvěma body
-		 */
 		static CurvePoint interpolate(CurvePoint p1, CurvePoint p2, double t) {
 			return new CurvePoint(
 				interpolatePoint(p1.main, p2.main, t),
@@ -61,96 +53,80 @@ public class KU2_EXT2 {
 	}
 
 	public void run() {
-		// Definice první vlnky - jednoduchá sinusoida
 		List<CurvePoint> wave1 = createWave1();
-
-		// Definice druhé vlnky - inverze s vyšší amplitudou
 		List<CurvePoint> wave2 = createWave2();
 
-		// Kontrola, že mají stejný počet bodů
 		if (wave1.size() != wave2.size()) {
 			throw new IllegalStateException("Obě křivky musí mít stejný počet kontrolních bodů!");
 		}
 
-		// Animace tam a zpět ve smyčce
-		int cycles = 3; // Počet cyklů animace
-		int stepsPerCycle = 100; // Počet kroků v jednom směru
-		int frameDelay = 30; // ms mezi snímky
+		int cycles = 3;
+		int stepsPerCycle = 100;
+		int frameDelay = 30;
+		int pauseDelay = 1000;
 
 		for (int cycle = 0; cycle < cycles; cycle++) {
-			// Tam: 0 -> 1
+			// Animace tam: 0 -> 1
 			for (int step = 0; step <= stepsPerCycle; step++) {
 				double t = (double) step / stepsPerCycle;
-				// Ease in-out pro plynulejší animaci
 				double smoothT = smoothstep(t);
 
 				List<CurvePoint> interpolated = interpolateCurves(wave1, wave2, smoothT);
 				drawFrame(interpolated, smoothT);
-				delay(frameDelay);
+
+				if (t == 0.0 || Math.abs(t - 0.5) < 0.01 || t == 1.0) {
+					delay(pauseDelay);
+				} else {
+					delay(frameDelay);
+				}
 			}
 
-			// Zpět: 1 -> 0
+			// Animace zpět: 1 -> 0
 			for (int step = stepsPerCycle; step >= 0; step--) {
 				double t = (double) step / stepsPerCycle;
 				double smoothT = smoothstep(t);
 
 				List<CurvePoint> interpolated = interpolateCurves(wave1, wave2, smoothT);
 				drawFrame(interpolated, smoothT);
-				delay(frameDelay);
+
+				if (t == 1.0 || Math.abs(t - 0.5) < 0.01 || t == 0.0) {
+					delay(pauseDelay);
+				} else {
+					delay(frameDelay);
+				}
 			}
 		}
 
-		// Závěrečná pauza
 		delay(2000);
 	}
 
-	/**
-	 * Smooth step funkce pro plynulejší interpolaci
-	 * Vytvoří ease-in ease-out efekt
-	 */
+	// Smooth step: 3t^2 - 2t^3
 	private double smoothstep(double t) {
-		// Hermitova interpolace: 3t^2 - 2t^3
 		return t * t * (3 - 2 * t);
 	}
 
-	/**
-	 * Vytvoření první vlnky - jednoduchá sinusoida
-	 */
 	private List<CurvePoint> createWave1() {
 		List<CurvePoint> points = new ArrayList<>();
-
-		// 5 kontrolních bodů pro hladkou vlnku
 		points.add(new CurvePoint(100, 300, 100, 300, 150, 250));
 		points.add(new CurvePoint(250, 200, 200, 250, 300, 150));
 		points.add(new CurvePoint(400, 300, 350, 250, 450, 350));
 		points.add(new CurvePoint(550, 400, 500, 350, 600, 450));
 		points.add(new CurvePoint(700, 300, 650, 350, 700, 300));
-
 		return points;
 	}
 
-	/**
-	 * Vytvoření druhé vlnky - dramatický W tvar s ostrými vrcholy
-	 */
 	private List<CurvePoint> createWave2() {
 		List<CurvePoint> points = new ArrayList<>();
-
-		// 5 kontrolních bodů - W tvar s výraznými vrcholy a propadlinami
 		points.add(new CurvePoint(100, 300, 100, 300, 130, 250));
 		points.add(new CurvePoint(200, 150, 170, 200, 230, 100));
 		points.add(new CurvePoint(400, 450, 350, 500, 450, 400));
 		points.add(new CurvePoint(600, 120, 570, 80, 630, 170));
 		points.add(new CurvePoint(700, 300, 670, 250, 700, 300));
-
 		return points;
 	}
 
-	/**
-	 * Interpolace mezi dvěma křivkami
-	 */
 	private List<CurvePoint> interpolateCurves(List<CurvePoint> curve1, List<CurvePoint> curve2, double t) {
 		List<CurvePoint> result = new ArrayList<>();
-
 		for (int i = 0; i < curve1.size(); i++) {
 			CurvePoint p1 = curve1.get(i);
 			CurvePoint p2 = curve2.get(i);
@@ -160,33 +136,17 @@ public class KU2_EXT2 {
 		return result;
 	}
 
-	/**
-	 * Vykreslení jednoho snímku animace
-	 */
 	private void drawFrame(List<CurvePoint> points, double t) {
 		V_RAM vRam = new V_RAM(WIDTH, HEIGHT);
-
-		// Vyčištění pozadí
 		clearBackground(vRam, Color.WHITE);
 
-		// Výběr barvy na základě interpolace
 		Color curveColor = interpolateColor(new Color(50, 100, 255), new Color(255, 100, 50), t);
-
-		// Vykreslení křivky
 		drawSpline(vRam, points, curveColor, 3);
-
-		// Vykreslení kontrolních bodů (volitelné - pro debug)
-		// drawControlPoints(vRam, points);
-
-		// Vykreslení indikátoru průběhu
 		drawProgressIndicator(vRam, t);
 
 		mainWindow.showImage(vRam.getImage());
 	}
 
-	/**
-	 * Interpolace mezi dvěma barvami
-	 */
 	private Color interpolateColor(Color c1, Color c2, double t) {
 		int r = (int) Math.round(c1.getRed() * (1 - t) + c2.getRed() * t);
 		int g = (int) Math.round(c1.getGreen() * (1 - t) + c2.getGreen() * t);
@@ -194,16 +154,13 @@ public class KU2_EXT2 {
 		return new Color(r, g, b);
 	}
 
-	/**
-	 * Vykreslení indikátoru průběhu animace
-	 */
 	private void drawProgressIndicator(V_RAM vRam, double t) {
 		int barWidth = 600;
 		int barHeight = 20;
 		int barX = (WIDTH - barWidth) / 2;
 		int barY = HEIGHT - 50;
 
-		// Pozadí progress baru
+		// Pozadí
 		for (int y = barY; y < barY + barHeight; y++) {
 			for (int x = barX; x < barX + barWidth; x++) {
 				vRam.setPixel(x, y, 200, 200, 200);
@@ -219,52 +176,34 @@ public class KU2_EXT2 {
 			}
 		}
 
-		// Ohraničení
 		drawRectangle(vRam, barX, barY, barWidth, barHeight, Color.BLACK);
 	}
 
-	/**
-	 * Vykreslení obdélníka (ohraničení)
-	 */
 	private void drawRectangle(V_RAM vRam, int x, int y, int width, int height, Color color) {
-		// Horní a dolní hrana
 		for (int i = 0; i < width; i++) {
 			vRam.setPixel(x + i, y, color.getRed(), color.getGreen(), color.getBlue());
 			vRam.setPixel(x + i, y + height - 1, color.getRed(), color.getGreen(), color.getBlue());
 		}
-		// Levá a pravá hrana
 		for (int i = 0; i < height; i++) {
 			vRam.setPixel(x, y + i, color.getRed(), color.getGreen(), color.getBlue());
 			vRam.setPixel(x + width - 1, y + i, color.getRed(), color.getGreen(), color.getBlue());
 		}
 	}
 
-	/**
-	 * Vykreslení kontrolních bodů a vodítek (pro debug)
-	 */
 	@SuppressWarnings("unused")
 	private void drawControlPoints(V_RAM vRam, List<CurvePoint> points) {
 		for (CurvePoint p : points) {
-			// Vodítka - čáry
 			Cv05_LinesDrawing.drawLine(vRam, p.main.x, p.main.y,
 				p.leftHandle.x, p.leftHandle.y, new Color(150, 150, 255));
 			Cv05_LinesDrawing.drawLine(vRam, p.main.x, p.main.y,
 				p.rightHandle.x, p.rightHandle.y, new Color(150, 150, 255));
 
-			// Levé vodítko
 			drawPoint(vRam, p.leftHandle.x, p.leftHandle.y, new Color(100, 100, 255), 3);
-
-			// Pravé vodítko
 			drawPoint(vRam, p.rightHandle.x, p.rightHandle.y, new Color(100, 100, 255), 3);
-
-			// Hlavní bod
 			drawPoint(vRam, p.main.x, p.main.y, Color.RED, 5);
 		}
 	}
 
-	/**
-	 * Vykreslení bodu
-	 */
 	private void drawPoint(V_RAM vRam, int x, int y, Color color, int size) {
 		for (int dy = -size; dy <= size; dy++) {
 			for (int dx = -size; dx <= size; dx++) {
@@ -277,27 +216,23 @@ public class KU2_EXT2 {
 		}
 	}
 
-	/**
-	 * Vykreslení spline pomocí kubických Bézierových křivek
-	 */
+	// Vykreslení spline pomocí kubických Bézierových křivek
 	private void drawSpline(V_RAM vRam, List<CurvePoint> points, Color color, int thickness) {
 		int n = points.size();
 		if (n < 2) return;
 
-		// Vykreslení segmentů mezi po sobě jdoucími body
 		double step = 0.01;
 
 		for (int i = 0; i < n - 1; i++) {
 			CurvePoint p0 = points.get(i);
 			CurvePoint p1 = points.get(i + 1);
 
-			// 4 kontrolní body pro kubickou Bézierovu křivku
-			Point cp0 = p0.main;           // Začátek
-			Point cp1 = p0.rightHandle;    // Pravé vodítko prvního bodu
-			Point cp2 = p1.leftHandle;     // Levé vodítko druhého bodu
-			Point cp3 = p1.main;           // Konec
+			Point cp0 = p0.main;
+			Point cp1 = p0.rightHandle;
+			Point cp2 = p1.leftHandle;
+			Point cp3 = p1.main;
 
-			// Pre-kalkulace koeficientů
+			// Koeficienty Bézierovy křivky
 			double qx0 = cp0.x;
 			double qy0 = cp0.y;
 			double qx1 = 3 * (cp1.x - cp0.x);
@@ -326,7 +261,7 @@ public class KU2_EXT2 {
 				prevPoint = currentPoint;
 			}
 
-			// Závěrečný segment pro zajištění dosažení t=1.0
+			// Závěrečný bod segmentu
 			Point finalPoint = new Point(
 				(int) Math.round(qx0 + qx1 + qx2 + qx3),
 				(int) Math.round(qy0 + qy1 + qy2 + qy3)
@@ -338,9 +273,6 @@ public class KU2_EXT2 {
 		}
 	}
 
-	/**
-	 * Vykreslení tlustší čáry
-	 */
 	private void drawThickLine(V_RAM vRam, int x1, int y1, int x2, int y2, Color color, int thickness) {
 		int width = vRam.getWidth();
 		int height = vRam.getHeight();
@@ -360,9 +292,6 @@ public class KU2_EXT2 {
 		}
 	}
 
-	/**
-	 * Vyčištění pozadí
-	 */
 	private void clearBackground(V_RAM vRam, Color color) {
 		for (int y = 0; y < vRam.getHeight(); y++) {
 			for (int x = 0; x < vRam.getWidth(); x++) {
@@ -371,9 +300,6 @@ public class KU2_EXT2 {
 		}
 	}
 
-	/**
-	 * Pauza
-	 */
 	private void delay(long millis) {
 		try {
 			Thread.sleep(millis);

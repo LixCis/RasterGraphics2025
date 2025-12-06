@@ -16,10 +16,8 @@ public class KU2 {
 	}
 
 	public void run() {
-		// Vytvoření V_RAM pro kreslení
 		V_RAM vRam = new V_RAM(800, 600);
 
-		// Vyplnění pozadí bílou barvou
 		for (int y = 0; y < vRam.getHeight(); y++) {
 			for (int x = 0; x < vRam.getWidth(); x++) {
 				vRam.setPixel(x, y, 255, 255, 255);
@@ -62,7 +60,6 @@ public class KU2 {
 			new Point(150, 350)
 		};
 
-		// Vyčištění obrazovky
 		for (int y = 0; y < vRam.getHeight(); y++) {
 			for (int x = 0; x < vRam.getWidth(); x++) {
 				vRam.setPixel(x, y, 255, 255, 255);
@@ -71,7 +68,6 @@ public class KU2 {
 
 		drawSpline(vRam, points2, Color.RED);
 
-		// Vykreslení kontrolních bodů
 		for (Point p : points2) {
 			drawPoint(vRam, p.x, p.y, Color.BLACK);
 		}
@@ -80,10 +76,7 @@ public class KU2 {
 		delay(15000);
 	}
 
-	/**
-	 * Vykreslení spline pomocí kubických Bézierových křivek
-	 * Vstup: Sekvence bodů P1, P2, ..., Pn (kde n >= 3)
-	 */
+	// Vykreslení spline: vstup P1, P2, ..., Pn (n >= 3)
     private void drawSpline(V_RAM vRam, Point[] points, Color color) {
         int n = points.length;
 
@@ -91,13 +84,13 @@ public class KU2 {
 			throw new IllegalArgumentException("At least 3 points are required for a spline");
 		}
 
-		// Step A: Rozšíření sekvence o fantomové body
+		// Rozšíření o fantomové body
 		Point[] extendedPoints = new Point[n + 2];
-		extendedPoints[0] = points[0];  // P0 = P1
+		extendedPoints[0] = points[0];
 		System.arraycopy(points, 0, extendedPoints, 1, n);
-		extendedPoints[n + 1] = points[n - 1];  // P(n+1) = Pn
+		extendedPoints[n + 1] = points[n - 1];
 
-		// Step B: Výpočet pomocných kontrolních bodů L a R
+		// Výpočet pomocných kontrolních bodů L a R
 		Point[] L = new Point[n + 2];
 		Point[] R = new Point[n + 2];
 
@@ -107,53 +100,44 @@ public class KU2 {
 			double ly = extendedPoints[i].y - (extendedPoints[i + 1].y - extendedPoints[i - 1].y) / 6.0;
 			L[i] = new Point((int) Math.round(lx), (int) Math.round(ly));
 
-			// Ri = Pi + (P(i+1) - P(i-1)) / 6
 			double rx = extendedPoints[i].x + (extendedPoints[i + 1].x - extendedPoints[i - 1].x) / 6.0;
 			double ry = extendedPoints[i].y + (extendedPoints[i + 1].y - extendedPoints[i - 1].y) / 6.0;
 			R[i] = new Point((int) Math.round(rx), (int) Math.round(ry));
 		}
 
-		// Step C: Definice a vykreslení segmentů
-		double step = 0.01;  // Malý krok pro hladkou křivku
+		// Vykreslení segmentů
+		double step = 0.01;
 
 		for (int i = 1; i < n; i++) {
-			// Definice 4 kontrolních bodů pro tento segment
-			Point cp0 = extendedPoints[i];      // Pi
-			Point cp1 = R[i];                   // Ri
-			Point cp2 = L[i + 1];               // L(i+1)
-			Point cp3 = extendedPoints[i + 1];  // P(i+1)
+			Point cp0 = extendedPoints[i];
+			Point cp1 = R[i];
+			Point cp2 = L[i + 1];
+			Point cp3 = extendedPoints[i + 1];
 
-			// Pre-kalkulace koeficientů (Polynomial Expansion Optimization)
-			// q0 = CP0
+			// Koeficienty Bézierovy křivky
 			double qx0 = cp0.x;
 			double qy0 = cp0.y;
 
-			// q1 = 3(CP1 - CP0)
 			double qx1 = 3 * (cp1.x - cp0.x);
 			double qy1 = 3 * (cp1.y - cp0.y);
 
-			// q2 = 3(CP0 - 2*CP1 + CP2)
 			double qx2 = 3 * (cp0.x - 2 * cp1.x + cp2.x);
 			double qy2 = 3 * (cp0.y - 2 * cp1.y + cp2.y);
 
-			// q3 = CP3 - 3*CP2 + 3*CP1 - CP0
 			double qx3 = cp3.x - 3 * cp2.x + 3 * cp1.x - cp0.x;
 			double qy3 = cp3.y - 3 * cp2.y + 3 * cp1.y - cp0.y;
 
-			// Optimalizovaná smyčka: iterace přes hodnoty t
 			Point prevPoint = null;
 
 			for (double t = 0.0; t <= 1.0; t += step) {
 				double t2 = t * t;
 				double t3 = t2 * t;
 
-				// Výpočet bodu pouze pomocí násobení a sčítání
 				double x = qx0 + qx1 * t + qx2 * t2 + qx3 * t3;
 				double y = qy0 + qy1 * t + qy2 * t2 + qy3 * t3;
 
 				Point currentPoint = new Point((int) Math.round(x), (int) Math.round(y));
 
-				// Vykreslení úsečky mezi po sobě jdoucími body
 				if (prevPoint != null) {
 					Cv05_LinesDrawing.drawLine(vRam, prevPoint.x, prevPoint.y,
 							currentPoint.x, currentPoint.y, color);
@@ -162,7 +146,7 @@ public class KU2 {
 				prevPoint = currentPoint;
 			}
 
-			// Vykreslení závěrečného segmentu pro zajištění dosažení t=1.0
+			// Závěrečný bod
 			Point finalPoint = new Point((int) Math.round(qx0 + qx1 + qx2 + qx3),
 					(int) Math.round(qy0 + qy1 + qy2 + qy3));
 			if (prevPoint != null) {
