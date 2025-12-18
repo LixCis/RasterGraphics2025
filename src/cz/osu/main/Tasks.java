@@ -83,11 +83,6 @@ public class Tasks {
 				System.out.println("Tasks.KU2_EXT1.onInterrupt() - currentInstance je NULL!");
 			}
 		}
-
-        @Override
-        public boolean isDefault() {
-            return true;
-        }
     }
 
     /**
@@ -107,18 +102,33 @@ public class Tasks {
     }
 
     /**
-     * KU3 - TODO
+     * KU3 - Složení analogových hodin
      */
     public static class KU3 implements RunnableExercise {
+        private cz.osu.tasks.KU3 currentTask;
+
         @Override
         public String getDisplayName() {
-            return "KU3 (TODO)";
+            return "KU3 - Složení analogových hodin";
         }
 
         @Override
         public void execute(MainWindow mainWindow) {
-            System.out.println("KU3 zatím není");
-            // TODO
+            currentTask = new cz.osu.tasks.KU3(mainWindow);
+            currentTask.execute();
+        }
+
+        @Override
+        public void onInterrupt() {
+            if (currentTask != null) {
+                currentTask.cancel(true);
+                currentTask = null;
+            }
+        }
+
+        @Override
+        public boolean isDefault() {
+            return true;
         }
     }
 }
