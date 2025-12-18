@@ -51,7 +51,9 @@ public class KU3 extends SwingWorker<Void, BufferedImage> {
         long frameDelay = 1000 / fps;
 
         for (int i = 0; i <= totalFrames; i++) {
-            if (isCancelled()) break;
+            if (isCancelled()) {
+                break;
+            }
 
             double progress = (double) i / totalFrames;
             double currentSecondsTotal = startSecondsTotal + progress * (endSecondsTotal - startSecondsTotal);
@@ -63,7 +65,12 @@ public class KU3 extends SwingWorker<Void, BufferedImage> {
             BufferedImage frame = createClockFrame(hours, minutes, seconds);
             publish(frame);
 
-            Thread.sleep(frameDelay);
+            try {
+                Thread.sleep(frameDelay);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
 
         return null;

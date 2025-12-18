@@ -116,11 +116,25 @@ public class Tasks {
         public void execute(MainWindow mainWindow) {
             currentTask = new cz.osu.tasks.KU3(mainWindow);
             currentTask.execute();
+
+            try {
+                currentTask.get();
+            } catch (InterruptedException e) {
+                System.out.println("KU3 was interrupted");
+                currentTask.cancel(true);
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                if (!(e.getCause() instanceof InterruptedException)) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         @Override
         public void onInterrupt() {
+            System.out.println("Tasks.KU3.onInterrupt() called");
             if (currentTask != null) {
+                System.out.println("Cancelling KU3 task");
                 currentTask.cancel(true);
                 currentTask = null;
             }
